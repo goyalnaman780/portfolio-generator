@@ -1,23 +1,19 @@
 """
 Shared pipeline for the AI-Assisted Resume Portfolio Generator.
 
-Both entry points use this module so there is exactly one implementation of
-the graded workflow (clean -> prompt -> Gemini -> JSON -> render):
-
-  main.py  - CLI: reads resume.txt directly (the flow described in the brief)
-  app.py   - Web: lets you upload a resume PDF, which is converted to text
-             and written into resume.txt, then runs this SAME pipeline
-
-Every function here raises PortfolioError on failure instead of exiting the
-process, so each front end can decide how to present the error (main.py
-prints it and exits; app.py shows it on the upload page).
+Supports multi-file extraction (PDF, DOCX, DOC, TXT, MD, RTF, JSON, PNG, JPG, WEBP, etc.),
+multimodal Gemini vision processing, customizable API keys, and theme-able HTML generation.
 """
 
+import io
 import json
 import os
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+import docx
+from pypdf import PdfReader
+from pypdf.errors import PyPdfError
 
 from google import genai
 from google.genai import types
@@ -32,11 +28,9 @@ TEMPLATE_FILE = "template.html"
 STYLE_FILE = BASE_DIR / "style.css"
 OUTPUT_FILE = BASE_DIR / "portfolio.html"
 
-MIN_RESUME_LENGTH = 200              # characters, after cleaning, minimum accepted
-DEFAULT_MODEL = "gemini-2.5-flash"   # override with GEMINI_MODEL in .env if your instructor approves a different model
+MIN_RESUME_LENGTH = 10               # minimum characters accepted for raw text
+DEFAULT_MODEL = "gemini-2.5-flash"   # default model
 
-# The shape every portfolio record must have. Used to fill in safe empty
-# values whenever Gemini's JSON is missing a key or the key is the wrong type.
 EMPTY_PORTFOLIO = {
     "name": "",
     "headline": "",
@@ -55,8 +49,67 @@ class PortfolioError(Exception):
 
 
 # --------------------------------------------------------------------------
-# Step 1: Clean + validate resume text
+# Step 1: Multi-Format File Extraction (PDF, Word, Text, Images)
 # --------------------------------------------------------------------------
+def extract_from_file_bytes(file_bytes: bytes, filename: str, mime_type: str = "") -> dict:
+    """Extract text or create an image Part from arbitrary file bytes."""
+    ext = Path(filename).suffix.lower()
+
+    # 1. PDF Documents
+    if ext == ".pdf" or mime_type == "application/pdf":
+        try:
+            reader = PdfReader(io.BytesIO(file_bytes))
+            if reader.is_encrypted:
+                raise PortfolioError(f"'{filename}' is password-protected. Please upload an unlocked PDF.")
+            pages_text = [page.extract_text() or "" for page in reader.pages]
+            text = "\n".join(pages_text).strip()
+            if text:
+                return {"type": "text", "filename": filename, "content": text}
+            raise PortfolioError(
+                f"No text extracted from '{filename}'. If this is a scanned document photo, "
+                "please upload it as an image file (PNG/JPG/WEBP)."
+            )
+        except PyPdfError as exc:
+            raise PortfolioError(f"Could not read PDF '{filename}': {exc}") from exc
+
+    # 2. Word Documents (.docx, .doc)
+    if ext in [".docx", ".doc"] or "word" in mime_type.lower():
+        try:
+            doc = docx.Document(io.BytesIO(file_bytes))
+            full_text = []
+            for para in doc.paragraphs:
+                if para.text.strip():
+                    full_text.append(para.text.strip())
+            for table in doc.tables:
+                for row in table.rows:
+                    row_text = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                    if row_text:
+                        full_text.append(" | ".join(row_text))
+            text = "\n".join(full_text).strip()
+            if not text:
+                raise PortfolioError(f"Word document '{filename}' is empty.")
+            return {"type": "text", "filename": filename, "content": text}
+        except Exception as exc:
+            raise PortfolioError(f"Could not extract content from Word document '{filename}': {exc}") from exc
+
+    # 3. Image Files (.png, .jpg, .jpeg, .webp, .bmp, .tiff)
+    if ext in [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff"] or mime_type.startswith("image/"):
+        image_mime = mime_type if mime_type.startswith("image/") else f"image/{ext.replace('.', '')}"
+        if image_mime == "image/jpg":
+            image_mime = "image/jpeg"
+        image_part = types.Part.from_bytes(data=file_bytes, mime_type=image_mime)
+        return {"type": "image", "filename": filename, "part": image_part}
+
+    # 4. Text / Markdown / Code / JSON (.txt, .md, .rtf, .json, etc.)
+    try:
+        text = file_bytes.decode("utf-8", errors="ignore").strip()
+        if text:
+            return {"type": "text", "filename": filename, "content": text}
+        raise PortfolioError(f"File '{filename}' is empty.")
+    except Exception as exc:
+        raise PortfolioError(f"Could not read file '{filename}': {exc}") from exc
+
+
 def clean_resume_text(text: str) -> str:
     """Strip unnecessary spaces and drop blank lines before sending text to Gemini."""
     lines = [line.strip() for line in text.splitlines()]
@@ -66,19 +119,11 @@ def clean_resume_text(text: str) -> str:
 
 def validate_resume_text(cleaned_text: str) -> None:
     if not cleaned_text.strip():
-        raise PortfolioError("The resume text is empty. Add resume content and try again.")
-    if len(cleaned_text) < MIN_RESUME_LENGTH:
-        raise PortfolioError(
-            f"The resume text only has {len(cleaned_text)} characters after cleaning "
-            f"(minimum required is {MIN_RESUME_LENGTH}). Add more resume detail "
-            "(summary, skills, experience, projects) and try again."
-        )
+        raise PortfolioError("The resume content is empty. Add resume details and try again.")
 
 
 def load_resume_text() -> str:
-    """Read, clean, and validate resume.txt. Used by both the CLI and the web app
-    (the web app writes freshly-extracted PDF text into resume.txt first, then
-    calls this exact same function, so both flows genuinely read from the file)."""
+    """Read, clean, and validate resume.txt for CLI compatibility."""
     if not RESUME_FILE.exists():
         raise PortfolioError(
             f"'{RESUME_FILE.name}' was not found in {BASE_DIR}. "
@@ -91,22 +136,21 @@ def load_resume_text() -> str:
 
 
 def write_resume_text(text: str) -> None:
-    """Overwrite resume.txt with new content (used by the web upload flow)."""
+    """Overwrite resume.txt with new content."""
     RESUME_FILE.write_text(text, encoding="utf-8")
 
 
 # --------------------------------------------------------------------------
-# Step 2: Build a controlled, extraction-only prompt
+# Step 2: Build Multimodal Extraction Prompt
 # --------------------------------------------------------------------------
 def build_prompt(resume_text: str) -> str:
-    return f"""You extract structured portfolio data from ONE resume.
+    return f"""You extract structured portfolio data from the provided resume/document content.
 
 STRICT RULES:
-- Use only information explicitly present in the resume text below.
+- Use only information explicitly present in the document text/images provided below.
 - Do NOT invent or guess skills, experience, projects, achievements, companies, dates, or links.
-- If a piece of information is missing, use an empty string "" or an empty list [], never a
-  placeholder such as "N/A", "Not specified", or "Unknown".
-- Keep the professional summary concise (2-3 sentences) and strictly factual.
+- If a piece of information is missing, use an empty string "" or an empty list [], never a placeholder such as "N/A" or "Unknown".
+- Keep the professional summary concise (2-3 sentences) and strictly factual based on the content.
 - Return valid JSON only. No markdown, no code fences, no explanation, no extra text.
 
 Return JSON matching exactly this structure and key names:
@@ -131,31 +175,54 @@ Return JSON matching exactly this structure and key names:
   }}
 }}
 
-RESUME TEXT:
+DOCUMENT CONTENT:
 \"\"\"
 {resume_text}
 \"\"\"
 """
 
 
+def build_multimodal_contents(extracted_items: list, extra_text: str = "") -> list:
+    """Build contents payload for Gemini containing image Parts and structured text prompt."""
+    contents = []
+    text_blocks = []
+
+    if extra_text and extra_text.strip():
+        text_blocks.append(f"--- DIRECT USER TEXT INPUT ---\n{extra_text.strip()}")
+
+    for item in extracted_items:
+        if item["type"] == "image":
+            contents.append(item["part"])
+            text_blocks.append(f"--- IMAGE DOCUMENT ({item['filename']}) --- Extract text, skills, experience, and contact details from this image document.")
+        elif item["type"] == "text":
+            text_blocks.append(f"--- DOCUMENT ({item['filename']}) ---\n{item['content']}")
+
+    combined_text = "\n\n".join(text_blocks)
+    if not combined_text.strip() and not any(i["type"] == "image" for i in extracted_items):
+        raise PortfolioError("No text or document images were provided. Please upload a file or type content.")
+
+    prompt_text = build_prompt(combined_text)
+    contents.append(prompt_text)
+    return contents
+
+
 # --------------------------------------------------------------------------
-# Step 3: Call Gemini (handle every failure mode without crashing)
+# Step 3: Call Gemini API
 # --------------------------------------------------------------------------
-def call_gemini(prompt: str) -> str:
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
+def call_gemini(contents: list | str, api_key: str = None, model_name: str = None) -> str:
+    key = (api_key or os.getenv("GEMINI_API_KEY") or "").strip()
+    if not key:
         raise PortfolioError(
-            "GEMINI_API_KEY is not set. Copy .env.example to .env and add your "
-            "Gemini API key from Google AI Studio."
+            "GEMINI_API_KEY is missing. Please enter your Gemini API Key in the settings panel or set it in your .env file."
         )
 
-    model_name = os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
+    model = model_name or os.getenv("GEMINI_MODEL", DEFAULT_MODEL)
 
     try:
-        client = genai.Client(api_key=api_key)
+        client = genai.Client(api_key=key)
         response = client.models.generate_content(
-            model=model_name,
-            contents=prompt,
+            model=model,
+            contents=contents,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.2,
@@ -163,14 +230,14 @@ def call_gemini(prompt: str) -> str:
         )
     except genai_errors.ClientError as exc:
         raise PortfolioError(
-            f"Gemini rejected the request ({exc}). Check your API key and GEMINI_MODEL in .env."
+            f"Gemini API request rejected ({exc}). Please check your API key and chosen model ({model})."
         ) from exc
     except genai_errors.ServerError as exc:
-        raise PortfolioError(f"Gemini's servers had an error ({exc}). Please try again in a moment.") from exc
+        raise PortfolioError(f"Gemini server error ({exc}). Please try again in a moment.") from exc
     except genai_errors.APIError as exc:
-        raise PortfolioError(f"Gemini API request failed: {exc}") from exc
-    except Exception as exc:  # network issues, timeouts, etc.
-        raise PortfolioError(f"Could not reach the Gemini API: {exc}") from exc
+        raise PortfolioError(f"Gemini API call failed: {exc}") from exc
+    except Exception as exc:
+        raise PortfolioError(f"Could not reach Gemini API: {exc}") from exc
 
     text = (response.text or "").strip()
     if not text:
@@ -179,10 +246,9 @@ def call_gemini(prompt: str) -> str:
 
 
 # --------------------------------------------------------------------------
-# Step 4: Parse + validate the JSON safely
+# Step 4: Parse + Validate JSON safely
 # --------------------------------------------------------------------------
 def parse_portfolio_json(raw_text: str) -> dict:
-    # Gemini is asked for raw JSON, but strip accidental ```json fences defensively.
     text = raw_text.strip()
     if text.startswith("```"):
         text = text.strip("`")
@@ -196,7 +262,7 @@ def parse_portfolio_json(raw_text: str) -> dict:
         raise PortfolioError(f"Gemini did not return valid JSON ({exc}). Please try again.") from exc
 
     if not isinstance(data, dict):
-        raise PortfolioError("Gemini's JSON was not a portfolio object. Please try again.")
+        raise PortfolioError("Gemini output was not a valid JSON portfolio object.")
 
     return normalize_portfolio(data)
 
@@ -220,7 +286,6 @@ def normalize_portfolio(data: dict) -> dict:
         normalized_contact[key] = value
     portfolio["contact"] = normalized_contact
 
-    # Strings only in list fields; drop anything malformed rather than crash the template.
     portfolio["skills"] = [s for s in portfolio["skills"] if isinstance(s, str) and s.strip()]
     portfolio["achievements"] = [a for a in portfolio["achievements"] if isinstance(a, str) and a.strip()]
     portfolio["education"] = [e for e in portfolio["education"] if isinstance(e, dict)]
@@ -234,9 +299,9 @@ def normalize_portfolio(data: dict) -> dict:
 
 
 # --------------------------------------------------------------------------
-# Step 5: Render portfolio.html (self-contained: CSS is inlined)
+# Step 5: Render HTML
 # --------------------------------------------------------------------------
-def render_portfolio(portfolio: dict) -> str:
+def render_portfolio(portfolio: dict, theme: str = "dark") -> str:
     env = Environment(
         loader=FileSystemLoader(str(BASE_DIR)),
         autoescape=select_autoescape(["html"]),
@@ -244,20 +309,18 @@ def render_portfolio(portfolio: dict) -> str:
     template = env.get_template(TEMPLATE_FILE)
     inline_css = STYLE_FILE.read_text(encoding="utf-8")
     style_tag = f"<style>{inline_css}</style>"
-    return template.render(style_tag=style_tag, **portfolio)
+    return template.render(style_tag=style_tag, theme=theme, **portfolio)
 
 
 # --------------------------------------------------------------------------
-# High-level orchestration (used by main.py; app.py calls the same steps
-# itself so it can show progress/errors on the web page)
+# High-Level Orchestration (CLI & Default Web)
 # --------------------------------------------------------------------------
-def generate_portfolio_html() -> str:
-    """Run the full pipeline against the current resume.txt and return the
-    rendered HTML. Also writes it to portfolio.html."""
+def generate_portfolio_html(api_key: str = None, model: str = None, theme: str = "dark") -> str:
+    """Run full pipeline against current resume.txt and return HTML."""
     resume_text = load_resume_text()
     prompt = build_prompt(resume_text)
-    raw_json_text = call_gemini(prompt)
-    portfolio = parse_portfolio_json(raw_json_text)
-    html = render_portfolio(portfolio)
+    raw_json = call_gemini(prompt, api_key=api_key, model_name=model)
+    portfolio = parse_portfolio_json(raw_json)
+    html = render_portfolio(portfolio, theme=theme)
     OUTPUT_FILE.write_text(html, encoding="utf-8")
     return html

@@ -1,139 +1,1055 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resume Portfolio Generator</title>
+<title>AI Resume Portfolio Generator Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f5f1;
-    --paper: #fcfbf9;
-    --ink: #14171c;
-    --ink-soft: #4a4f58;
-    --ink-faint: #8b8f97;
-    --accent: #2b5d4f;
-    --accent-soft: #e3ece8;
-    --line: #ddd9cd;
-    --error: #9c3b2e;
-    --error-soft: #f6e9e6;
+    --bg: #090d16;
+    --panel-bg: rgba(17, 24, 39, 0.7);
+    --panel-border: rgba(255, 255, 255, 0.08);
+    --ink: #f3f4f6;
+    --ink-soft: #9ca3af;
+    --ink-faint: #6b7280;
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --accent-glow: rgba(16, 185, 129, 0.25);
+    --accent-soft: rgba(16, 185, 129, 0.12);
+    --cyan-glow: rgba(6, 182, 212, 0.25);
+    --error: #ef4444;
+    --error-soft: rgba(239, 68, 68, 0.12);
+    --radius: 16px;
+    --font-sans: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
   }
-  * { box-sizing: border-box; }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    margin: 0;
+    background-color: var(--bg);
+    background-image: 
+      radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: var(--font-sans);
     min-height: 100vh;
+    padding: 2rem 1rem;
+    line-height: 1.5;
+  }
+
+  .container {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  /* Header Branding */
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--accent-soft);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--accent);
+    padding: 0.35rem 0.9rem;
+    border-radius: 50px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  .badge-pulse {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 1.8s infinite;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #ffffff 30%, #9ca3af 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.6rem;
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 1.05rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+
+  /* Main Studio Card */
+  .studio-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(18px);
+    border-radius: var(--radius);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+    margin-bottom: 2rem;
+  }
+
+  /* Settings Drawer Bar */
+  .settings-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--panel-border);
+    padding-bottom: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  .settings-title {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .settings-toggle-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    color: var(--ink-soft);
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  .settings-toggle-btn:hover {
+    color: #fff;
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .settings-drawer {
+    display: none;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--panel-border);
+    padding: 1.2rem;
+    border-radius: 12px;
+    margin-bottom: 1.8rem;
+  }
+  .settings-drawer.open { display: grid; }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .form-label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-soft);
+  }
+  .form-input, .form-select {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid var(--panel-border);
+    color: var(--ink);
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+
+  /* Input Method Tabs */
+  .tabs-header {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--panel-border);
+    margin-bottom: 1.5rem;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: var(--ink-soft);
+    padding: 0.75rem 1.2rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active {
+    color: var(--accent);
+  }
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Drag & Drop Zone */
+  .dropzone {
+    border: 2px dashed var(--panel-border);
+    background: rgba(15, 23, 42, 0.4);
+    border-radius: 14px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: 0 0 25px var(--accent-glow);
+  }
+  .dropzone-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 1rem;
+    color: var(--accent);
+  }
+  .dropzone-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+  .dropzone-sub {
+    color: var(--ink-soft);
+    font-size: 0.88rem;
+    margin-bottom: 1.2rem;
+  }
+  .format-tags {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .fmt-tag {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--panel-border);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    color: var(--ink-soft);
+  }
+
+  /* File List Container */
+  .file-list {
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--panel-border);
+    padding: 0.65rem 1rem;
+    border-radius: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  .file-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .file-icon-badge {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .badge-pdf { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+  .badge-word { background: rgba(59, 130, 246, 0.18); color: #60a5fa; }
+  .badge-img { background: rgba(168, 85, 247, 0.18); color: #c084fc; }
+  .badge-txt { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+  .file-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    word-break: break-all;
+  }
+  .file-size {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+  }
+  .file-remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+  }
+  .file-remove:hover { color: var(--error); }
+
+  /* Text Area Editor */
+  .text-editor-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .editor-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .btn-sample {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--accent);
+    padding: 0.4rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-sample:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+  textarea.form-textarea {
+    width: 100%;
+    min-height: 220px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--panel-border);
+    color: var(--ink);
+    padding: 1rem;
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    outline: none;
+    resize: vertical;
+  }
+  textarea.form-textarea:focus {
+    border-color: var(--accent);
+  }
+
+  /* Submit Action Button */
+  .generate-btn {
+    width: 100%;
+    margin-top: 1.8rem;
+    padding: 1.1rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 1.05rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px var(--accent-glow);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    gap: 0.6rem;
+  }
+  .generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px var(--accent-glow);
+  }
+  .generate-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Error Alert Box */
+  .error-box {
+    margin-top: 1.2rem;
+    padding: 0.9rem 1.2rem;
+    background: var(--error-soft);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: var(--error);
+    border-radius: 10px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .error-box.show { display: block; }
+
+  /* Progress Loader Overlay / Box */
+  .progress-box {
+    display: none;
+    margin-top: 1.8rem;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--panel-border);
     padding: 1.5rem;
+    border-radius: 14px;
   }
-  .card {
-    width: 100%;
-    max-width: 480px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    padding: clamp(1.75rem, 5vw, 2.75rem);
+  .progress-box.show { display: block; }
+
+  .step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
   }
-  .eyebrow {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    margin: 0 0 0.85rem;
-  }
-  h1 {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: 1.9rem;
-    line-height: 1.15;
-    margin: 0 0 0.6rem;
-  }
-  p.lede {
-    color: var(--ink-soft);
-    margin: 0 0 1.75rem;
-    font-size: 0.98rem;
-  }
-  .field-label {
-    display: block;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
-    font-size: 0.75rem;
+  .step-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.88rem;
     color: var(--ink-faint);
-    margin-bottom: 0.5rem;
   }
-  input[type="file"] {
-    width: 100%;
-    font-family: "Inter", sans-serif;
-    font-size: 0.92rem;
-    padding: 0.85rem;
-    border: 1px dashed var(--line);
-    background: var(--bg);
-    border-radius: 3px;
+  .step-item.active { color: var(--ink); font-weight: 600; }
+  .step-item.done { color: var(--accent); }
+  .step-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.72rem;
   }
-  button {
-    margin-top: 1.4rem;
-    width: 100%;
-    padding: 0.85rem;
+  .step-item.active .step-icon {
     background: var(--accent);
     color: #fff;
-    border: none;
-    border-radius: 3px;
-    font-family: "Inter", sans-serif;
+    box-shadow: 0 0 10px var(--accent-glow);
+  }
+  .step-item.done .step-icon {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Output Preview Workspace */
+  .workspace {
+    display: none;
+    margin-top: 2rem;
+  }
+  .workspace.show { display: block; }
+
+  .workspace-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 0.85rem 1.2rem;
+    border-radius: 14px 14px 0 0;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+  }
+  .tool-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .btn-tool {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--panel-border);
+    color: var(--ink);
+    padding: 0.45rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-family: var(--font-sans);
     font-weight: 600;
-    font-size: 0.95rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
   }
-  button:hover { background: #234c40; }
-  button:focus-visible, input:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+  .btn-tool:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
   }
-  .error {
-    margin-bottom: 1.4rem;
-    padding: 0.85rem 1rem;
-    background: var(--error-soft);
-    color: var(--error);
-    border-radius: 3px;
-    font-size: 0.9rem;
+
+  .preview-iframe-wrapper {
+    width: 100%;
+    height: 780px;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    border-top: none;
+    border-radius: 0 0 14px 14px;
+    overflow: hidden;
   }
-  .note {
-    margin-top: 1.6rem;
-    font-size: 0.8rem;
-    color: var(--ink-faint);
-    line-height: 1.5;
+  iframe#portfolio-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
   }
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
+
+  /* JSON Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
   }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: var(--bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 750px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 1.5rem;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .modal-title { font-weight: 700; font-size: 1.1rem; }
+  .modal-close { background: none; border: none; color: var(--ink-soft); font-size: 1.2rem; cursor: pointer; }
+  .modal-body { padding: 1.2rem 1.5rem; overflow-y: auto; flex: 1; }
+  textarea#json-editor {
+    width: 100%;
+    height: 380px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--panel-border);
+    color: #34d399;
+    padding: 1rem;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    outline: none;
+  }
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--panel-border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
 
-<main class="card">
-  <p class="eyebrow">// resume → portfolio</p>
-  <h1>Upload your resume</h1>
-  <p class="lede">Upload a PDF resume and Gemini will turn it into a portfolio page, using only what's in the document.</p>
+<div class="container">
 
-  {% if error %}
-  <p class="error">{{ error }}</p>
-  {% endif %}
+  <!-- Header -->
+  <header class="header">
+    <div class="badge">
+      <span class="badge-pulse"></span>
+      AI Multimodal Generator v2.0
+    </div>
+    <h1>Resume Portfolio Studio</h1>
+    <p class="subtitle">Upload PDF, Word files, screenshots/photos, or paste resume text. Gemini AI extracts content and builds a modern responsive portfolio.</p>
+  </header>
 
-  <form action="/generate" method="post" enctype="multipart/form-data">
-    <label class="field-label" for="resume_pdf">resume.pdf</label>
-    <input type="file" id="resume_pdf" name="resume_pdf" accept="application/pdf,.pdf" required>
-    <button type="submit">Generate portfolio</button>
-  </form>
+  <!-- Studio Card -->
+  <main class="studio-card">
+    
+    <!-- Top Settings Bar -->
+    <div class="settings-bar">
+      <span class="settings-title">// Studio Configuration</span>
+      <button type="button" class="settings-toggle-btn" id="settings-toggle-btn">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+        AI Settings & API Key
+      </button>
+    </div>
 
-  <p class="note">
-    Runs locally: your PDF is converted to text and processed by this app on your
-    own machine, then sent to Gemini to extract portfolio content. Nothing is
-    invented — every field is checked against your resume text.
-  </p>
-</main>
+    <!-- Collapsible Settings Drawer -->
+    <div class="settings-drawer" id="settings-drawer">
+      <div class="form-group">
+        <label class="form-label" for="api-key-input">Gemini API Key (Optional if set in .env)</label>
+        <input type="password" id="api-key-input" class="form-input" placeholder="AIzaSy... (Paste key if not in .env)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="model-select">AI Model</label>
+        <select id="model-select" class="form-select">
+          <option value="gemini-2.5-flash" selected>gemini-2.5-flash (Fast & Multimodal)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro (Reasoning)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="theme-select">Portfolio Theme</label>
+        <select id="theme-select" class="form-select">
+          <option value="dark" selected>Dark Glassmorphic Developer</option>
+          <option value="light">Light Modern Clean</option>
+          <option value="neon">Cyber Neon Glow</option>
+          <option value="navy">Executive Navy</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Input Tabs -->
+    <div class="tabs-header">
+      <button type="button" class="tab-btn active" data-tab="tab-files">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        Upload Documents & Photos
+      </button>
+      <button type="button" class="tab-btn" data-tab="tab-text">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Paste Direct Text
+      </button>
+    </div>
+
+    <!-- Tab 1: File Dropzone -->
+    <div class="tab-content active" id="tab-files">
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="file-input" multiple accept=".pdf,.docx,.doc,.txt,.md,.rtf,.json,.png,.jpg,.jpeg,.webp,.bmp" style="display: none;">
+        <svg class="dropzone-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <h3 class="dropzone-title">Drag & drop your files here, or click to browse</h3>
+        <p class="dropzone-sub">Supports PDF, Word (.docx/.doc), Text (.txt), and Images/Photos (.png, .jpg, .webp)</p>
+        <div class="format-tags">
+          <span class="fmt-tag">📄 PDF</span>
+          <span class="fmt-tag">📘 DOCX / DOC</span>
+          <span class="fmt-tag">🖼️ PNG / JPG / WEBP</span>
+          <span class="fmt-tag">📝 TXT / MD</span>
+        </div>
+      </div>
+
+      <!-- Attached Files List -->
+      <div class="file-list" id="file-list"></div>
+    </div>
+
+    <!-- Tab 2: Text Area -->
+    <div class="tab-content" id="tab-text">
+      <div class="text-editor-container">
+        <div class="editor-actions">
+          <button type="button" class="btn-sample" id="btn-load-sample">✨ Load Sample Resume Data</button>
+        </div>
+        <textarea id="resume-text-input" class="form-textarea" placeholder="Paste your resume text here (Summary, Experience, Education, Skills, Projects, Contact info)..."></textarea>
+      </div>
+    </div>
+
+    <!-- Error Alert Box -->
+    <div class="error-box" id="error-box"></div>
+
+    <!-- Progress Indicator Box -->
+    <div class="progress-box" id="progress-box">
+      <div class="step-list">
+        <div class="step-item" id="step-1"><span class="step-icon">1</span> <span>Reading & extracting document payload...</span></div>
+        <div class="step-item" id="step-2"><span class="step-icon">2</span> <span>Gemini Multimodal Reasoning & AI Analysis...</span></div>
+        <div class="step-item" id="step-3"><span class="step-icon">3</span> <span>Structuring Portfolio JSON Schema...</span></div>
+        <div class="step-item" id="step-4"><span class="step-icon">4</span> <span>Rendering Portfolio Web Experience...</span></div>
+      </div>
+    </div>
+
+    <!-- Main Submit Button -->
+    <button type="button" class="generate-btn" id="generate-btn">
+      <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Generate AI Portfolio
+    </button>
+
+  </main>
+
+  <!-- Workspace Preview Section -->
+  <section class="workspace" id="workspace">
+    <div class="workspace-toolbar">
+      <div class="settings-title">// Generated Portfolio Output</div>
+      <div class="tool-actions">
+        <button type="button" class="btn-tool" id="btn-open-json">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          Edit Data JSON
+        </button>
+        <button type="button" class="btn-tool" id="btn-download">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download HTML
+        </button>
+        <button type="button" class="btn-tool" id="btn-copy">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+          Copy Code
+        </button>
+        <button type="button" class="btn-tool" id="btn-fullscreen">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          Open New Tab
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-iframe-wrapper">
+      <iframe id="portfolio-iframe" title="Portfolio Preview"></iframe>
+    </div>
+  </section>
+
+</div>
+
+<!-- JSON Editor Modal -->
+<div class="modal-overlay" id="json-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 class="modal-title">Edit Portfolio Data JSON</h3>
+      <button type="button" class="modal-close" id="modal-close-btn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="json-editor"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn-tool" id="modal-cancel-btn">Cancel</button>
+      <button type="button" class="generate-btn" id="modal-apply-btn" style="margin-top:0; width:auto; padding:0.6rem 1.2rem;">Apply & Re-render</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // DOM Elements
+    const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+    const settingsDrawer = document.getElementById('settings-drawer');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const modelSelect = document.getElementById('model-select');
+    const themeSelect = document.getElementById('theme-select');
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('file-input');
+    const fileList = document.getElementById('file-list');
+
+    const btnLoadSample = document.getElementById('btn-load-sample');
+    const resumeTextInput = document.getElementById('resume-text-input');
+
+    const generateBtn = document.getElementById('generate-btn');
+    const errorBox = document.getElementById('error-box');
+    const progressBox = document.getElementById('progress-box');
+    
+    const workspace = document.getElementById('workspace');
+    const portfolioIframe = document.getElementById('portfolio-iframe');
+    const btnDownload = document.getElementById('btn-download');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    const jsonModal = document.getElementById('json-modal');
+    const btnOpenJson = document.getElementById('btn-open-json');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+    const modalCancelBtn = document.getElementById('modal-cancel-btn');
+    const modalApplyBtn = document.getElementById('modal-apply-btn');
+    const jsonEditor = document.getElementById('json-editor');
+
+    // State Variables
+    let selectedFiles = [];
+    let currentPortfolioData = null;
+    let currentHtml = '';
+
+    // Load saved API Key from localStorage
+    const savedApiKey = localStorage.getItem('gemini_api_key');
+    if (savedApiKey) apiKeyInput.value = savedApiKey;
+
+    apiKeyInput.addEventListener('input', () => {
+      localStorage.setItem('gemini_api_key', apiKeyInput.value.strip ? apiKeyInput.value.trim() : apiKeyInput.value);
+    });
+
+    // Toggle Settings Drawer
+    settingsToggleBtn.addEventListener('click', () => {
+      settingsDrawer.classList.toggle('open');
+    });
+
+    // Tab Switcher
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // Dropzone Events
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        addFiles(Array.from(e.dataTransfer.files));
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) {
+        addFiles(Array.from(fileInput.files));
+        fileInput.value = '';
+      }
+    });
+
+    function addFiles(files) {
+      files.forEach(file => {
+        if (!selectedFiles.some(f => f.name === file.name && f.size === file.size)) {
+          selectedFiles.push(file);
+        }
+      });
+      renderFileList();
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      renderFileList();
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function getBadgeClass(filename) {
+      const ext = filename.split('.').pop().toLowerCase();
+      if (ext === 'pdf') return { label: 'PDF', cls: 'badge-pdf' };
+      if (['docx', 'doc'].includes(ext)) return { label: 'WORD', cls: 'badge-word' };
+      if (['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(ext)) return { label: 'IMG', cls: 'badge-img' };
+      return { label: 'TXT', cls: 'badge-txt' };
+    }
+
+    function renderFileList() {
+      fileList.innerHTML = '';
+      selectedFiles.forEach((file, idx) => {
+        const badge = getBadgeClass(file.name);
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `
+          <div class="file-info">
+            <span class="file-icon-badge ${badge.cls}">${badge.label}</span>
+            <div>
+              <div class="file-name">${file.name}</div>
+              <div class="file-size">${formatSize(file.size)}</div>
+            </div>
+          </div>
+          <button type="button" class="file-remove" data-idx="${idx}">&times;</button>
+        `;
+        fileList.appendChild(item);
+      });
+
+      fileList.querySelectorAll('.file-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeFile(parseInt(btn.dataset.idx));
+        });
+      });
+    }
+
+    // Load Sample Resume Button
+    btnLoadSample.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/sample_resume');
+        const data = await res.json();
+        resumeTextInput.value = data.text;
+        // Switch to text tab
+        document.querySelector('[data-tab="tab-text"]').click();
+      } catch (err) {
+        showError('Could not load sample resume data.');
+      }
+    });
+
+    // Step Progress Updates
+    function updateProgress(stepNum) {
+      progressBox.classList.add('show');
+      for (let i = 1; i <= 4; i++) {
+        const el = document.getElementById('step-' + i);
+        if (i < stepNum) {
+          el.className = 'step-item done';
+        } else if (i === stepNum) {
+          el.className = 'step-item active';
+        } else {
+          el.className = 'step-item';
+        }
+      }
+    }
+
+    function hideProgress() {
+      progressBox.classList.remove('show');
+    }
+
+    function showError(msg) {
+      errorBox.textContent = msg;
+      errorBox.classList.add('show');
+    }
+
+    function hideError() {
+      errorBox.textContent = '';
+      errorBox.classList.remove('show');
+    }
+
+    // Main Generate Handler
+    generateBtn.addEventListener('click', async () => {
+      hideError();
+      const resumeText = resumeTextInput.value.trim();
+
+      if (selectedFiles.length === 0 && !resumeText) {
+        showError('Please upload at least one resume document (PDF, Word, Image) or paste text in the text tab.');
+        return;
+      }
+
+      generateBtn.disabled = true;
+      updateProgress(1);
+
+      const formData = new FormData();
+      formData.append('api_key', apiKeyInput.value.trim());
+      formData.append('model', modelSelect.value);
+      formData.append('theme', themeSelect.value);
+      formData.append('resume_text', resumeText);
+
+      selectedFiles.forEach(file => {
+        formData.append('resume_files', file);
+      });
+
+      try {
+        updateProgress(2);
+        const res = await fetch('/api/generate_json', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+          hideProgress();
+          showError(result.error);
+          generateBtn.disabled = false;
+          return;
+        }
+
+        updateProgress(3);
+        currentPortfolioData = result.data;
+
+        updateProgress(4);
+        await renderPortfolioHtml(currentPortfolioData, themeSelect.value);
+
+        hideProgress();
+        generateBtn.disabled = false;
+        workspace.classList.add('show');
+        workspace.scrollIntoView({ behavior: 'smooth' });
+
+      } catch (err) {
+        hideProgress();
+        showError('Network or server error: ' + err.message);
+        generateBtn.disabled = false;
+      }
+    });
+
+    // Render HTML Helper
+    async function renderPortfolioHtml(portfolioObj, themeStr) {
+      const res = await fetch('/api/render_html', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ portfolio: portfolioObj, theme: themeStr })
+      });
+      const result = await res.json();
+      if (result.success) {
+        currentHtml = result.html;
+        portfolioIframe.srcdoc = currentHtml;
+      } else {
+        showError('Rendering failed: ' + result.error);
+      }
+    }
+
+    // Toolbar Actions
+    btnDownload.addEventListener('click', () => {
+      if (!currentHtml) return;
+      const blob = new Blob([currentHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'portfolio.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    btnCopy.addEventListener('click', async () => {
+      if (!currentHtml) return;
+      try {
+        await navigator.clipboard.writeText(currentHtml);
+        const orig = btnCopy.textContent;
+        btnCopy.textContent = '✓ Copied!';
+        setTimeout(() => btnCopy.textContent = orig, 2000);
+      } catch (err) {
+        alert('Could not copy code to clipboard.');
+      }
+    });
+
+    btnFullscreen.addEventListener('click', () => {
+      if (!currentHtml) return;
+      const win = window.open();
+      win.document.write(currentHtml);
+      win.document.close();
+    });
+
+    // JSON Modal Actions
+    btnOpenJson.addEventListener('click', () => {
+      if (!currentPortfolioData) return;
+      jsonEditor.value = JSON.stringify(currentPortfolioData, null, 2);
+      jsonModal.classList.add('show');
+    });
+
+    function closeJsonModal() { jsonModal.classList.remove('show'); }
+    modalCloseBtn.addEventListener('click', closeJsonModal);
+    modalCancelBtn.addEventListener('click', closeJsonModal);
+
+    modalApplyBtn.addEventListener('click', async () => {
+      try {
+        const parsed = JSON.parse(jsonEditor.value);
+        currentPortfolioData = parsed;
+        await renderPortfolioHtml(currentPortfolioData, themeSelect.value);
+        closeJsonModal();
+      } catch (err) {
+        alert('Invalid JSON: ' + err.message);
+      }
+    });
+
+  })();
+</script>
 
 </body>
 </html>

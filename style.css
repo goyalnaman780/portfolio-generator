@@ -48,6 +48,46 @@
   --shadow-hover: 0 15px 35px -5px rgba(13, 148, 136, 0.06);
 }
 
+[data-theme="neon"] {
+  /* Neon Mode Variables */
+  --bg: #030712;
+  --radial-color: rgba(236, 72, 153, 0.12);
+  --card-bg: rgba(17, 24, 39, 0.7);
+  --card-border: rgba(236, 72, 153, 0.2);
+  --card-border-hover: rgba(236, 72, 153, 0.5);
+  --ink: #f9fafb;
+  --ink-soft: #d1d5db;
+  --ink-faint: #9ca3af;
+  --accent-color: #ec4899;
+  --accent-gradient: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+  --accent-soft: rgba(236, 72, 153, 0.15);
+  --accent-soft-2: rgba(236, 72, 153, 0.05);
+  --accent-glow: rgba(236, 72, 153, 0.3);
+  --line: rgba(236, 72, 153, 0.15);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+  --shadow-hover: 0 15px 35px -5px rgba(236, 72, 153, 0.2);
+}
+
+[data-theme="navy"] {
+  /* Navy Executive Variables */
+  --bg: #0b1329;
+  --radial-color: rgba(59, 130, 246, 0.12);
+  --card-bg: rgba(15, 23, 42, 0.65);
+  --card-border: rgba(59, 130, 246, 0.15);
+  --card-border-hover: rgba(59, 130, 246, 0.4);
+  --ink: #f8fafc;
+  --ink-soft: #94a3b8;
+  --ink-faint: #64748b;
+  --accent-color: #3b82f6;
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --accent-soft: rgba(59, 130, 246, 0.15);
+  --accent-soft-2: rgba(59, 130, 246, 0.04);
+  --accent-glow: rgba(59, 130, 246, 0.25);
+  --line: rgba(255, 255, 255, 0.1);
+  --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  --shadow-hover: 0 15px 35px -5px rgba(59, 130, 246, 0.15);
+}
+
 /* ---------- Base Styles ---------- */
 
 * {
