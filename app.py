@@ -81,7 +81,7 @@ def sample_resume():
 def generate_json_api():
     try:
         api_key = request.form.get("api_key", "").strip()
-        model = request.form.get("model", "gemini-2.5-flash").strip()
+        model = request.form.get("model", "gemini-3.6-flash").strip()
         user_text = request.form.get("resume_text", "").strip()
 
         files = request.files.getlist("resume_files")
@@ -139,7 +139,7 @@ def render_html_api():
 def generate():
     try:
         api_key = request.form.get("api_key", "").strip()
-        model = request.form.get("model", "gemini-2.5-flash").strip()
+        model = request.form.get("model", "gemini-3.6-flash").strip()
         theme = request.form.get("theme", "dark").strip()
         user_text = request.form.get("resume_text", "").strip()
 

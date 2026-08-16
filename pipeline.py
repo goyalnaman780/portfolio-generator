@@ -18,6 +18,9 @@ from pypdf.errors import PyPdfError
 from google import genai
 from google.genai import types
 from google.genai import errors as genai_errors
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -29,7 +32,7 @@ STYLE_FILE = BASE_DIR / "style.css"
 OUTPUT_FILE = BASE_DIR / "portfolio.html"
 
 MIN_RESUME_LENGTH = 10               # minimum characters accepted for raw text
-DEFAULT_MODEL = "gemini-2.5-flash"   # default model
+DEFAULT_MODEL = "gemini-3.6-flash"   # default model
 
 EMPTY_PORTFOLIO = {
     "name": "",
